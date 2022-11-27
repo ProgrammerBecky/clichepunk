@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "@snowpack/plugin-webpack": "^3.0.0",
+    "three": "^0.145.0",
+    "three-mesh-bvh": "^0.5.18"
+  },
+  "name": "chronos",
+  "version": "1.0.0",
+  "description": "It's a game, called chronos",
+  "main": "index.js",
+  "devDependencies": {
+    "snowpack": "^3.8.8"
+  },
+  "scripts": {
+    "dev": "snowpack dev",
+    "build": "snowpack build  --config=snowpack.config.mjs"
+  },
+  "author": "Becky Rose",
+  "license": "MIT"
+}

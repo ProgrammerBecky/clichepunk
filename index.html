@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Chronos Game" />
+        <title>CLICHEPUNK 2077</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Syncopate&display=swap" rel="stylesheet">        
+        <link href="style.css" rel="stylesheet">        
+    </head>
+    <body>
+        <div id='Debug' style='position:absolute;top:0;left:0;z-index:9999;color:white'></div>
+        <div class='options' id='Options'></div>
+        <div id='Loading'>
+            <div class='loadingDiv'>
+                <h1>CLICHEPUNK</h1>
+                <h2>2077</h2>
+            </div>
+            <h4 id='LoadingMessage'>[Loading]</h4>
+            <div id='PreGameDialogue'>
+                <h3>🌍 Browser Support</h3>
+                <p>Game designed for Chrome Browser</p>
+                <p>Firefox is not supported, Edge seems okay, Safari is untested, Opera is anyone's guess.</p>
+                <h3>🎤 Microphone</h3>
+                <p>You provide the voice acting for your character, microphone access is required for this game to work.</p>
+                <h3>📷 Camera</h3>
+                <p>Avatar generation has optional support for your webcam, the generator will build a 3d model of you which you can then customise.</p>
+                <p>Alternatively you may generate an avatar manually using the options provided.</p>
+                <h3>⌨ Controls</h3>
+                <p>Hold spacebar to run, WASD keys to move around</p>
+                <div class='buttonContainer'>
+                    <button id='StartGame'>Generate Character</button>
+                    <button id='RestartGame'>Use Last Character</button>
+                </div>
+            </div>
+            <iframe id="CharacterCreation" allow="camera *; clipboard-write"></iframe>
+        </div>
+        <script type="module" src="/index.js"></script>
+    </body>
+</html>

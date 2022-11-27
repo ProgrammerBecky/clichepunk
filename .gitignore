@@ -1,0 +1,8 @@
+**/*.jpg
+**/*.png
+**/*.glb
+**/*.ogg
+**/*.fbx
+**/*.mp4
+build/
+node_modules/
