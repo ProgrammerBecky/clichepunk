@@ -75,6 +75,7 @@ export class City {
             //G.gltf.load( '3d/high/city/City.gltf' , result => {
                 //result = result.scene;
                 
+                console.log( 'Assembling Mesh' );
                 loadedMeshes++;
                 
                 let lightList = [];
@@ -121,20 +122,27 @@ export class City {
                         this.reverseRotatingElements.push( child );
                     }    
                 });
+                
+                console.log( 'Cleaning up Mesh' );
                 while( removeList.length > 0 ) {
                     const killIt = removeList.shift();
                     killIt.parent.remove( killIt );
                 }
                 
+                console.log( 'Painting Mesh' );
                 this.paint( result );
                 
                 this.city.add( result );
                 if( loadedMeshes === model.length ) {
+                    console.log( 'Single Surfacing' );
                     this.ent = rebuildSingleSurface( this.city , this.rotatingElements , this.reverseRotatingElements );
                     delete this.city;
                     G.scene.add( this.ent );                 
+                    G.monitor();
                 }
+                console.log( 'Adding Lights' );
                 G.lighting.addLights( lightList );
+                console.log( 'Done' );
                 
             });    
         });
