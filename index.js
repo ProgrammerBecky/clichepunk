@@ -52,6 +52,13 @@ import { Corpses } from './Corpses.js';
 
 import { Quest } from './Quests/Quest.js';
 
+/*
+if( window.self !== window.top ) {
+    const notLocal = document.getElementById('NotLocal');
+    notLocal.style.display = 'block';
+}
+*/
+
 G.manager = new LoadingManager();
 G.manager.onProgress = (url, itemsLoaded, itemsTotal) => {
     let loader = document.getElementById( 'LoadingMessage' );
@@ -72,6 +79,173 @@ G.fbx = new FBXLoader( G.manager );
 https://github.com/N8python/randomPhysics
 */
 
+
+G.monitor = () => {
+    
+    console.log( 'Monitor' , G.unlockLoading );
+    
+    if( G.unlockLoading >= 10 ) {
+        const loading = document.getElementById( 'LoadingMessage' );
+        if( loading ) {
+            loading.style.display = 'none';
+        }
+        const buttonContainer = document.getElementsByClassName('buttonContainer');
+        if( buttonContainer[0] ) {
+            buttonContainer[0].style.display = 'flex';
+        }
+    }
+    else {
+        setTimeout( () => {
+            G.monitor();
+        } , 500 );
+    }
+}
+
+
+window.setDamage = (vl) => {
+    G.viewDamage = vl;
+    G.glitchPass.curF = 0;
+
+    if( G.viewDamage > 0 ) {
+        if( ! renderPassEffects ) {
+            renderPassEffects = true;
+            //G.composer.addPass( G.bloomPass );
+            G.composer.addPass( G.glitchPass );
+            G.composer.addPass( G.filmPass );
+        }
+    }
+    else {
+        if( renderPassEffects ) {
+            renderPassEffects = false;
+            //G.composer.removePass( G.bloomPass );
+            G.composer.removePass( G.glitchPass );
+            G.composer.removePass( G.filmPass );
+        }        
+    }
+
+    if( G.viewDamage > 0.5 ) {
+        G.glitchPass.enabled = true;
+        G.glitchPass.minX = 120 + (1.0 - G.viewDamage) * 300;
+        G.glitchPass.maxX = 300 + (1.0 - G.viewDamage) * 1200;        
+    }
+    else {
+        G.glitchPass.enabled = false;        
+    }
+    
+    if( G.viewDamage === 0 ) {
+        G.filmPass.uniforms.nIntensity.value = 0;
+        G.filmPass.uniforms.sIntensity.value = 0;
+        G.filmPass.uniforms.sCount.value = 0;
+        G.filmPass.uniforms.grayscale.value = 0;
+        G.filmPass.uniforms.needsUpdate = true;
+    }
+    else {
+        
+        //G.bloomPass.strength = G.viewDamage;
+        //G.bloomPass.radius = G.viewDamage / 3;
+        //G.bloomPass.threshold = G.viewDamage / 4;
+
+        G.filmPass.uniforms.nIntensity.value = G.viewDamage / 2;
+        G.filmPass.uniforms.sIntensity.value = G.viewDamage / 3;
+        G.filmPass.uniforms.sCount.value = Math.floor( G.viewDamage * 1024 );
+        G.filmPass.uniforms.grayscale.value = ( G.viewDamage > 0.66 ) ? 1 : 0;
+        G.filmPass.uniforms.needsUpdate = true;
+    }
+    
+    G.glitchPass.generateTrigger();
+}
+
+const characterGenerated = (e) => {
+
+    const charGen = document.getElementById( 'CharacterCreation' );
+    if( charGen ) {
+        charGen.style.display = 'none';
+    }
+
+    const url = e.data;
+    setTimeout( () => {
+        G.gltf.load( `${url}?textureAtlas=none` , result => {
+            
+            G.characterUrl = url;
+            if( window.self === window.top ) {
+                if( window.localStorage ) {
+                    window.localStorage.setItem( 'characterUrl' , url );
+                }
+            }
+            
+            G.playerEnt = result.scene;
+            G.playerEnt.scale.set( 100,100,100 );
+
+            G.playerEnt.position.set( 4428.831719689362, 2196.681884765625, -768.73599141624 );
+            G.playerEnt.add( G.listener );
+            G.playerEnt.rotation.set( 0,0,0 );
+            G.playerEnt.traverse( child => {
+                if( child.isMesh ) {
+                    child.material = G.lighting.applyLights( child.material );
+                }
+            });
+            
+            G.viewMode = 'freeCam';
+            G.camera.position.set( 4428.831719689362, 2396.68188476563, -468.89531947376025 );
+            G.camera.lookAt( G.playerEnt.position.x , G.playerEnt.position.y + 150 , G.playerEnt.position.z );
+            
+            const loader = document.getElementById( 'Loading' );
+            if( loader ) {
+                document.body.removeChild( loader );
+            }
+            
+            G.scene.add( G.playerEnt );
+            G.gameRunning = true;
+            G.quests.quests.AnimationSet.entry = true;
+        });
+    },1);
+
+}
+
+const initLoadingMenu = () => {    
+    const restartGameButton = document.getElementById( 'RestartGame' );
+        
+    if( window.self !== window.top || ! window.localStorage || ! window.localStorage.getItem( 'characterUrl' ) ) {
+        restartGameButton.style.display = 'none';
+    }
+    else {
+        restartGameButton.addEventListener( 'click' , () => {
+
+            const dialogue = document.getElementById( 'PreGameDialogue' );
+            if( dialogue ) {
+                dialogue.style.display = 'none';
+            }
+
+            characterGenerated({
+                data: G.characterUrl,
+            });
+            
+            G.music.play( 'theme' );
+            
+        });
+    }
+    
+    const startGameButton = document.getElementById( 'StartGame' );
+    startGameButton.addEventListener( 'click' , () => {
+        
+        const dialogue = document.getElementById( 'PreGameDialogue' );
+        if( dialogue ) {
+            dialogue.style.display = 'none';
+        }
+        
+        const charGen = document.getElementById( 'CharacterCreation' );
+        if( charGen ) {
+            charGen.style.display = 'block';
+            charGen.src = `https://corpgame.readyplayer.me/avatar`;
+        }
+        
+        window.addEventListener('message', characterGenerated );
+        document.addEventListener('message', characterGenerated );        
+        
+        G.music.play( 'theme' );
+
+    });
+}
 
 let stats, renderPassEffects;
 const init3d = () => {
@@ -204,58 +378,6 @@ const init3d = () => {
     G.composer.addPass( G.bloomPass );    
     G.composer.addPass( G.SMAAPass );
 
-window.setDamage = (vl) => {
-    G.viewDamage = vl;
-    G.glitchPass.curF = 0;
-
-    if( G.viewDamage > 0 ) {
-        if( ! renderPassEffects ) {
-            renderPassEffects = true;
-            //G.composer.addPass( G.bloomPass );
-            G.composer.addPass( G.glitchPass );
-            G.composer.addPass( G.filmPass );
-        }
-    }
-    else {
-        if( renderPassEffects ) {
-            renderPassEffects = false;
-            //G.composer.removePass( G.bloomPass );
-            G.composer.removePass( G.glitchPass );
-            G.composer.removePass( G.filmPass );
-        }        
-    }
-
-    if( G.viewDamage > 0.5 ) {
-        G.glitchPass.enabled = true;
-        G.glitchPass.minX = 120 + (1.0 - G.viewDamage) * 300;
-        G.glitchPass.maxX = 300 + (1.0 - G.viewDamage) * 1200;        
-    }
-    else {
-        G.glitchPass.enabled = false;        
-    }
-    
-    if( G.viewDamage === 0 ) {
-        G.filmPass.uniforms.nIntensity.value = 0;
-        G.filmPass.uniforms.sIntensity.value = 0;
-        G.filmPass.uniforms.sCount.value = 0;
-        G.filmPass.uniforms.grayscale.value = 0;
-        G.filmPass.uniforms.needsUpdate = true;
-    }
-    else {
-        
-        //G.bloomPass.strength = G.viewDamage;
-        //G.bloomPass.radius = G.viewDamage / 3;
-        //G.bloomPass.threshold = G.viewDamage / 4;
-
-        G.filmPass.uniforms.nIntensity.value = G.viewDamage / 2;
-        G.filmPass.uniforms.sIntensity.value = G.viewDamage / 3;
-        G.filmPass.uniforms.sCount.value = Math.floor( G.viewDamage * 1024 );
-        G.filmPass.uniforms.grayscale.value = ( G.viewDamage > 0.66 ) ? 1 : 0;
-        G.filmPass.uniforms.needsUpdate = true;
-    }
-    
-    G.glitchPass.generateTrigger();
-}
     setDamage(0);
 
     G.characters = [
@@ -294,90 +416,8 @@ window.setDamage = (vl) => {
         G.music.fadeMusic();
     }
     
-    const characterGenerated = (e) => {
+    initLoadingMenu();
 
-        const charGen = document.getElementById( 'CharacterCreation' );
-        if( charGen ) {
-            charGen.style.display = 'none';
-        }
-    
-        const url = e.data;
-        setTimeout( () => {
-            G.gltf.load( `${url}?textureAtlas=none` , result => {
-                
-                if( window.localStorage ) {
-                    window.localStorage.setItem( 'characterUrl' , url );
-                }
-                
-                G.playerEnt = result.scene;
-                G.playerEnt.scale.set( 100,100,100 );
-
-                G.playerEnt.position.set( 4428.831719689362, 2196.681884765625, -768.73599141624 );
-                G.playerEnt.add( G.listener );
-                G.playerEnt.rotation.set( 0,0,0 );
-                G.playerEnt.traverse( child => {
-                    if( child.isMesh ) {
-                        child.material = G.lighting.applyLights( child.material );
-                    }
-                });
-                
-                G.viewMode = 'freeCam';
-                G.camera.position.set( 4428.831719689362, 2396.68188476563, -468.89531947376025 );
-                G.camera.lookAt( G.playerEnt.position.x , G.playerEnt.position.y + 150 , G.playerEnt.position.z );
-                
-                const loader = document.getElementById( 'Loading' );
-                if( loader ) {
-                    document.body.removeChild( loader );
-                }
-                
-                G.scene.add( G.playerEnt );
-                G.gameRunning = true;
-                G.quests.quests.AnimationSet.entry = true;
-            });
-        },1);
-
-    }
-    
-    const restartGameButton = document.getElementById( 'RestartGame' );
-    if( ! window.localStorage || ! window.localStorage.getItem( 'characterUrl' ) ) {
-        restartGameButton.style.display = 'none';
-    }
-    else {
-        restartGameButton.addEventListener( 'click' , () => {
-
-            const dialogue = document.getElementById( 'PreGameDialogue' );
-            if( dialogue ) {
-                dialogue.style.display = 'none';
-            }
-
-            characterGenerated({
-                data: window.localStorage.getItem( 'characterUrl' )
-            });
-            
-            G.music.play( 'theme' );
-            
-        });
-    }
-    const startGameButton = document.getElementById( 'StartGame' );
-    startGameButton.addEventListener( 'click' , () => {
-        
-        const dialogue = document.getElementById( 'PreGameDialogue' );
-        if( dialogue ) {
-            dialogue.style.display = 'none';
-        }
-        
-        const charGen = document.getElementById( 'CharacterCreation' );
-        if( charGen ) {
-            charGen.style.display = 'block';
-            charGen.src = `https://corpgame.readyplayer.me/avatar`;
-        }
-        
-        window.addEventListener('message', characterGenerated );
-        document.addEventListener('message', characterGenerated );        
-        
-        G.music.play( 'theme' );
-
-    });
     const dialogue = document.getElementById( 'PreGameDialogue' );
     if( dialogue ) {
         dialogue.style.display = 'block';    
@@ -385,27 +425,8 @@ window.setDamage = (vl) => {
  
     G.gameRunning = false;
     G.unlockLoading = 0;
-    monitor();
     animate();
- 
-}
-const monitor = () => {
     
-    if( G.unlockLoading >= 10 ) {
-        const loading = document.getElementById( 'LoadingMessage' );
-        if( loading ) {
-            loading.style.display = 'none';
-        }
-        const buttonContainer = document.getElementsByClassName('buttonContainer');
-        if( buttonContainer[0] ) {
-            buttonContainer[0].style.display = 'flex';
-        }
-    }
-    else {
-        setTimeout( () => {
-            monitor();
-        } , 500 );
-    }
 }
 
 const animate = () => {

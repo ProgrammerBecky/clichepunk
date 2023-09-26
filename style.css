@@ -21,36 +21,30 @@ html, body{
     height: 100%;
     background-color: #FDF401;
     z-index: 9999;
+    overflow-y: auto;
 }
 .loadingDiv {
     display: flex;
     flex-direction: column;
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translateX( -50% ) translateY( -50% );
+    justify-content: center;
+    align-items: center;
 }
 #Loading h1 {
     font-family: 'cyberpunkregular';
-    font-size: 5rem;
+    font-size: 3rem;
     color: magenta;
     text-shadow: 6px 6px 0px cyan;
     margin: 0;
     padding: 0.5rem 0;
 }
 #Loading h2 {
-    font-size: 2rem;
+    font-size: 1rem;
     color: black;
-    align-self: flex-end;
     margin: 0;
     padding: 0;
 }
 #Loading h4{
-    position: absolute;
-    top: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1rem;
+    font-size: 0.5rem;
     color: black;
     margin-top: 2rem;
     text-align: center;
@@ -78,16 +72,13 @@ html, body{
     font-weight: bold;
 }
 #PreGameDialogue{
-    position: absolute;
-    left: 50%;
-    bottom: 0;
-    transform: translateX(-50%);
     background-color: black;
     border: 0.33rem white solid;
     border-top-left-radius: 1rem;
     border-top-right-radius: 1rem;
     padding: 1rem;
     color: cyan;
+    overflow-y: auto;
 }
 .buttonContainer{
     width: 100%;
@@ -113,8 +104,8 @@ html, body{
 #CharacterCreation{
     display: none;
     position: absolute;
-    top: 10%;
-    left: 10%;
-    width: 80%;
-    height: 80%;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
 }
